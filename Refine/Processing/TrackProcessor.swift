@@ -9,6 +9,7 @@ final class TrackProcessor {
     struct RestorationState {
         var fraction: Double
         var preview: SpectrogramImage?
+        var engine: RestorationSettings.Engine
     }
 
     private(set) var analyzing: Set<UUID> = []
@@ -16,7 +17,6 @@ final class TrackProcessor {
     var lastError: String?
 
     @ObservationIgnored private var tasks: [UUID: Task<Void, Never>] = [:]
-    @ObservationIgnored private let engine: any RestorationEngine = DSPRestorationEngine()
 
     // MARK: - Import
 
@@ -89,7 +89,8 @@ final class TrackProcessor {
         let spectrogramURL = track.restoredSpectrogramURL
         try? FileManager.default.removeItem(at: workingURL)
 
-        restorations[id] = RestorationState(fraction: 0)
+        let engine = settings.engine.implementation
+        restorations[id] = RestorationState(fraction: 0, engine: settings.engine)
         tasks[id] = Task {
             defer {
                 restorations[id] = nil
@@ -99,7 +100,7 @@ final class TrackProcessor {
                 for try await event in engine.restore(job) {
                     switch event {
                     case .progress(let fraction, let preview):
-                        restorations[id] = RestorationState(fraction: fraction, preview: preview)
+                        restorations[id] = RestorationState(fraction: fraction, preview: preview, engine: settings.engine)
                     case .finished(let output):
                         if let previous = track.restoredURL { try? FileManager.default.removeItem(at: previous) }
                         let finalURL = track.directory.appending(path: finalName)
@@ -108,6 +109,7 @@ final class TrackProcessor {
                         try output.spectrogramPNG?.write(to: spectrogramURL)
                         track.restoredFileName = finalName
                         track.restoredAnalysis = output.analysis
+                        track.restoredEngine = output.engine
                         track.restoredAt = .now
                     }
                 }

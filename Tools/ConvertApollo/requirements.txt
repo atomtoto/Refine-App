@@ -1,0 +1,7 @@
+# coremltools 9 is tested up to torch 2.7.
+torch==2.7.0
+coremltools==9.0
+numpy
+soundfile
+omegaconf
+huggingface_hub

@@ -12,6 +12,8 @@ final class Track {
     var restoredFileName: String?
     var importedAt: Date
     var restoredAt: Date?
+    /// Display name of the engine that produced the restored file.
+    var restoredEngine: String?
     var failureMessage: String?
     var analysisData: Data?
     var restoredAnalysisData: Data?

@@ -6,7 +6,8 @@ enum AudioWriterError: LocalizedError {
     var errorDescription: String? { "Impossible de préparer l'écriture du fichier audio." }
 }
 
-/// Writes 16-bit / 44.1 kHz stereo — the Red Book CD format — as WAV or Apple Lossless.
+/// Writes 16-bit / 44.1 kHz stereo — the Red Book CD format — as WAV or Apple Lossless, or encodes it to
+/// AAC 256 kbps, the format Apple Music streams and AirPods receive over Bluetooth.
 final class AudioWriter {
     static let channelCount = 2
 
@@ -28,6 +29,11 @@ final class AudioWriter {
         case .alac:
             settings[AVFormatIDKey] = kAudioFormatAppleLossless
             settings[AVEncoderBitDepthHintKey] = 16
+        case .aac:
+            settings[AVFormatIDKey] = kAudioFormatMPEG4AAC
+            settings[AVEncoderBitRateKey] = 256_000
+            settings[AVEncoderBitRateStrategyKey] = AVAudioBitRateStrategy_VariableConstrained
+            settings[AVEncoderAudioQualityKey] = AVAudioQuality.max.rawValue
         }
         file = try AVAudioFile(forWriting: url, settings: settings, commonFormat: .pcmFormatInt16, interleaved: false)
         guard let buffer = AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: 16_384) else {
