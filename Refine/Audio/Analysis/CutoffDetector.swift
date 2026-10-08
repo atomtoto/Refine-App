@@ -62,7 +62,7 @@ enum CutoffDetector {
     }
 
     /// Least-squares fit of level against log2(frequency) over the octave below `cutoff`.
-    private static func slope(_ decibels: [Double], binWidth: Double, upTo cutoff: Double) -> Double {
+    static func slope(_ decibels: [Double], binWidth: Double, upTo cutoff: Double) -> Double {
         let lower = max(1, Int(cutoff / 2 / binWidth))
         let upper = min(decibels.count - 1, Int(cutoff * 0.95 / binWidth))
         guard upper - lower > 8 else { return -9 }
@@ -80,7 +80,7 @@ enum CutoffDetector {
         return min(max(numerator / denominator, -20), -2)
     }
 
-    private static func smoothed(_ values: [Double], radius: Int) -> [Double] {
+    static func smoothed(_ values: [Double], radius: Int) -> [Double] {
         values.indices.map { i in
             mean(values[max(0, i - radius)...min(values.count - 1, i + radius)])
         }

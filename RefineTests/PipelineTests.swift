@@ -45,7 +45,7 @@ struct PipelineTests {
         let job = RestorationJob(source: source, destination: destination, analysis: analysis, settings: settings)
         for try await event in DSPRestorationEngine().restore(job) {
             switch event {
-            case .progress(let fraction, _): fractions.append(fraction)
+            case .progress(let progress): fractions.append(progress.fraction)
             case .finished(let result): output = result
             }
         }
@@ -65,5 +65,8 @@ struct PipelineTests {
         #expect(abs(Double(restored.length) / 44_100 - sourceDuration) < 0.01)
         #expect(fractions == fractions.sorted())
         #expect((output?.analysis.cutoffFrequency ?? 0) > 19_500)
+        // The first pass's float file is cleaned up.
+        let intermediate = destination.deletingPathExtension().appendingPathExtension("pass1.caf")
+        #expect(!FileManager.default.fileExists(atPath: intermediate.path(percentEncoded: false)))
     }
 }

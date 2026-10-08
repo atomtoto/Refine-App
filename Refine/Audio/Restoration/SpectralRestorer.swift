@@ -38,7 +38,8 @@ final class SpectralRestorer {
         }
     }
 
-    private let stft = StreamingSTFT(size: 2048, hop: 512)
+    // 23 ms frames: long frames spread each attack's copied highs ahead of it, which sounds like pre-echo.
+    private let stft = StreamingSTFT(size: 1024, hop: 256)
     private let parameters: Parameters
     private var random: SeededRandom
 

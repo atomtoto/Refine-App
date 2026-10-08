@@ -53,6 +53,13 @@ struct PlayerDeck: View {
                     .accessibilityHidden(true)
                 }
             }
+
+            if player.isBluetoothOutput {
+                Label("Écoute Bluetooth : le casque recompresse le son. Comparez de préférence en filaire.", systemImage: "headphones")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
         .padding(16)
         .glassEffect(.regular, in: .rect(cornerRadius: 30))

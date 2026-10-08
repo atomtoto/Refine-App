@@ -13,11 +13,29 @@ struct RestorationOutput: Sendable {
     var spectrogramPNG: Data?
     /// Display name of the engine that produced it.
     var engine: String
+    /// What the finishing stages did, in plain words.
+    var notes: [String] = []
+}
+
+struct RestorationProgress: Sendable {
+    enum Stage: Sendable {
+        /// The engine itself: band replication or the neural network.
+        case engine
+        /// Finishing stages: highs, stereo image, attacks.
+        case finishing
+    }
+
+    /// Overall fraction done.
+    var fraction: Double
+    var stage: Stage
+    /// Restored spectrogram painted so far; `nil` keeps the previous one.
+    var preview: SpectrogramImage?
+    /// Share of the timeline the preview covers.
+    var previewCoverage: Double
 }
 
 enum RestorationEvent: Sendable {
-    /// Fraction done, with the restored spectrogram painted so far.
-    case progress(Double, SpectrogramImage?)
+    case progress(RestorationProgress)
     case finished(RestorationOutput)
 }
 

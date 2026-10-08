@@ -1,8 +1,8 @@
 import Foundation
 
-/// On-device restoration built from signal processing only: declipping, spectral hole filling,
-/// bandwidth extension, then dithered conversion to 16-bit / 44.1 kHz. Streams the file in blocks,
-/// so memory stays flat whatever the duration.
+/// On-device restoration built from signal processing only: declipping, spectral hole filling and
+/// bandwidth extension, followed by the shared finishing stages. Streams the file in blocks, so memory stays
+/// flat whatever the duration.
 struct DSPRestorationEngine: RestorationEngine {
     static let name = "Traitement du signal"
 
@@ -11,30 +11,22 @@ struct DSPRestorationEngine: RestorationEngine {
     }
 
     static func run(_ job: RestorationJob, events: @escaping (RestorationEvent) -> Void) throws -> RestorationOutput {
-        let analysis = job.analysis
-        let settings = job.settings
-        let reader = try AudioReader(url: job.source)
-        let output = try RestorationOutputStage(
-            destination: job.destination, format: settings.exportFormat,
-            expectedFrames: reader.estimatedFrameCount, events: events)
+        try RestorationPipeline.run(job, engineName: name, engineShare: 0.6, events: events) { reader, sink in
+            let parameters = SpectralRestorer.Parameters(analysis: job.analysis, settings: job.settings)
+            let restorers = (0..<reader.channelCount).map { SpectralRestorer(parameters: parameters, seed: UInt64($0 + 1)) }
+            let declipper = job.settings.declip && job.analysis.isClipped ? Declipper() : nil
+            // Rebuilt peaks need somewhere to go.
+            let preGain: Float = declipper == nil ? 1 : 0.89
 
-        let parameters = SpectralRestorer.Parameters(analysis: analysis, settings: settings)
-        let restorers = (0..<reader.channelCount).map { SpectralRestorer(parameters: parameters, seed: UInt64($0 + 1)) }
-        let declipper = settings.declip && analysis.isClipped ? Declipper() : nil
-        // Rebuilt peaks need somewhere to go.
-        let preGain: Float = declipper == nil ? 1 : 0.89
-
-        while var block = try reader.read(maxFrames: 32_768) {
-            try Task.checkCancellation()
-            if let declipper {
-                for index in block.indices { declipper.process(&block[index]) }
+            while var block = try reader.read(maxFrames: 32_768) {
+                try Task.checkCancellation()
+                if let declipper {
+                    for index in block.indices { declipper.process(&block[index]) }
+                    block = block.map { $0.map { $0 * preGain } }
+                }
+                try sink(zip(restorers, block).map { $0.process($1) })
             }
-            if preGain != 1 {
-                block = block.map { $0.map { $0 * preGain } }
-            }
-            try output.write(zip(restorers, block).map { $0.process($1) })
+            try sink(restorers.map { $0.finish() })
         }
-        try output.write(restorers.map { $0.finish() })
-        return output.finish(engine: name)
     }
 }

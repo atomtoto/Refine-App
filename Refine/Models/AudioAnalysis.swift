@@ -66,6 +66,8 @@ struct AudioAnalysis: Codable, Hashable, Sendable {
     var verdict: Verdict
     /// Bitrate of the lossy source this spectrum most likely came from, in kbps.
     var estimatedBitrate: Int?
+    /// Stereo width and where it collapses. Absent from analyses made before it existed.
+    var stereo: StereoProfile?
 
     /// 0…1 score of how much of the CD band is intact.
     var fidelity: Double {

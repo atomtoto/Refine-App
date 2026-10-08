@@ -8,7 +8,10 @@ import SwiftData
 final class TrackProcessor {
     struct RestorationState {
         var fraction: Double
+        var stage: RestorationProgress.Stage = .engine
         var preview: SpectrogramImage?
+        /// Share of the timeline `preview` covers.
+        var previewCoverage: Double = 0
         var engine: RestorationSettings.Engine
     }
 
@@ -99,8 +102,14 @@ final class TrackProcessor {
             do {
                 for try await event in engine.restore(job) {
                     switch event {
-                    case .progress(let fraction, let preview):
-                        restorations[id] = RestorationState(fraction: fraction, preview: preview, engine: settings.engine)
+                    case .progress(let progress):
+                        let previous = restorations[id]
+                        restorations[id] = RestorationState(
+                            fraction: progress.fraction,
+                            stage: progress.stage,
+                            preview: progress.preview ?? previous?.preview,
+                            previewCoverage: progress.preview == nil ? previous?.previewCoverage ?? 0 : progress.previewCoverage,
+                            engine: settings.engine)
                     case .finished(let output):
                         if let previous = track.restoredURL { try? FileManager.default.removeItem(at: previous) }
                         let finalURL = track.directory.appending(path: finalName)
@@ -110,6 +119,7 @@ final class TrackProcessor {
                         track.restoredFileName = finalName
                         track.restoredAnalysis = output.analysis
                         track.restoredEngine = output.engine
+                        track.restorationNotes = output.notes.isEmpty ? nil : output.notes.joined(separator: "\n")
                         track.restoredAt = .now
                     }
                 }

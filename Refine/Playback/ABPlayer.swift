@@ -17,6 +17,8 @@ final class ABPlayer {
     private(set) var hasRestored = false
     /// Smoothed output level, 0…1.
     private(set) var level: Float = 0
+    /// Bluetooth headphones re-encode everything, which narrows the audible gap between versions.
+    private(set) var isBluetoothOutput = false
     var source: Source = .original {
         didSet { if source != oldValue { crossfade() } }
     }
@@ -34,6 +36,12 @@ final class ABPlayer {
     init() {
         engine.attach(originalNode)
         engine.attach(restoredNode)
+        updateRoute()
+        NotificationCenter.default.addObserver(
+            forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main
+        ) { @Sendable [weak self] _ in
+            Task { @MainActor in self?.updateRoute() }
+        }
     }
 
     func load(original: URL, restored: URL?) throws {
@@ -72,6 +80,7 @@ final class ABPlayer {
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
             try AVAudioSession.sharedInstance().setActive(true)
+            updateRoute()
             if !engine.isRunning { try engine.start() }
         } catch {
             return
@@ -157,6 +166,11 @@ final class ABPlayer {
 
     private func tick() {
         currentTime = playbackTime()
+    }
+
+    private func updateRoute() {
+        let bluetooth: Set<AVAudioSession.Port> = [.bluetoothA2DP, .bluetoothLE, .bluetoothHFP]
+        isBluetoothOutput = AVAudioSession.sharedInstance().currentRoute.outputs.contains { bluetooth.contains($0.portType) }
     }
 
     // MARK: - A/B

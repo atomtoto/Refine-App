@@ -14,6 +14,8 @@ final class Track {
     var restoredAt: Date?
     /// Display name of the engine that produced the restored file.
     var restoredEngine: String?
+    /// What the finishing stages did, one line each.
+    var restorationNotes: String?
     var failureMessage: String?
     var analysisData: Data?
     var restoredAnalysisData: Data?

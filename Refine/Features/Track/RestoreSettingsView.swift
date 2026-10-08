@@ -64,21 +64,19 @@ struct RestoreSettingsView: View {
                 } header: {
                     Text("Intensité")
                 } footer: {
-                    Text(settings.engine == .apollo
-                        ? "Part du son restauré par l'IA, mélangé à l'original. « Subtil » reste au plus près de l'original."
-                        : "Règle le niveau des aigus reconstruits. « Subtil » reste au plus près de l'original.")
+                    Text("Dose les finitions : brillance des aigus, attaques, espace stéréo. « Subtil » reste au plus près de l'original.")
                 }
 
                 Section {
-                    if settings.engine == .signal {
-                        Toggle(isOn: $settings.extendBandwidth) {
-                            Label {
-                                Text("Reconstruire les aigus")
-                                Text(extendDetail).font(.footnote)
-                            } icon: {
-                                Image(systemName: "arrow.up.and.down.text.horizontal")
-                            }
+                    Toggle(isOn: $settings.extendBandwidth) {
+                        Label {
+                            Text(settings.engine == .apollo ? "Renforcer les aigus reconstruits" : "Reconstruire les aigus")
+                            Text(extendDetail).font(.footnote)
+                        } icon: {
+                            Image(systemName: "arrow.up.and.down.text.horizontal")
                         }
+                    }
+                    if settings.engine == .signal {
                         Toggle(isOn: $settings.fillSpectralHoles) {
                             Label {
                                 Text("Combler les trous du spectre")
@@ -86,6 +84,22 @@ struct RestoreSettingsView: View {
                             } icon: {
                                 Image(systemName: "square.grid.3x3.bottomright.filled")
                             }
+                        }
+                    }
+                    Toggle(isOn: $settings.restoreTransients) {
+                        Label {
+                            Text("Raviver les attaques")
+                            Text("Retire le souffle de pré-écho qui précède les percussions.").font(.footnote)
+                        } icon: {
+                            Image(systemName: "waveform.badge.plus")
+                        }
+                    }
+                    Toggle(isOn: $settings.restoreStereo) {
+                        Label {
+                            Text("Restaurer l'espace stéréo")
+                            Text(stereoDetail).font(.footnote)
+                        } icon: {
+                            Image(systemName: "arrow.left.and.right")
                         }
                     }
                     Toggle(isOn: $settings.declip) {
@@ -100,7 +114,7 @@ struct RestoreSettingsView: View {
                     Text("Étapes")
                 } footer: {
                     if settings.engine == .apollo {
-                        Text("Apollo reconstruit lui-même les aigus et corrige les artefacts de compression sur tout le spectre.")
+                        Text("Apollo reconstruit les aigus et corrige les artefacts sur tout le spectre ; les étapes ci-dessus finissent le travail.")
                     }
                 }
 
@@ -135,9 +149,22 @@ struct RestoreSettingsView: View {
 
     private var extendDetail: String {
         guard let analysis else { return "Prolonge le spectre au-delà de la coupure." }
-        return analysis.hasMissingHighs
-            ? "De \(analysis.cutoffFrequency.kilohertz) jusqu'à \(SpectralRestorer.Parameters.targetTop.kilohertz)."
-            : "Rien à reconstruire : le spectre est déjà complet."
+        guard analysis.hasMissingHighs else { return "Rien à reconstruire : le spectre est déjà complet." }
+        return settings.engine == .apollo
+            ? "Ramène les aigus recréés au-delà de \(analysis.cutoffFrequency.kilohertz) à un niveau naturel."
+            : "De \(analysis.cutoffFrequency.kilohertz) jusqu'à \(SpectralRestorer.Parameters.targetTop.kilohertz)."
+    }
+
+    private var stereoDetail: String {
+        guard let stereo = analysis?.stereo else { return "Rouvre l'image si l'encodeur l'a resserrée dans les aigus." }
+        switch stereo.kind {
+        case .collapsed:
+            return "Image resserrée au-dessus de \(stereo.collapseFrequency?.kilohertz ?? "6 kHz") : elle sera rouverte."
+        case .intact:
+            return "Image stéréo intacte : rien à corriger."
+        case .mono:
+            return "Fichier mono : rien à élargir."
+        }
     }
 
     private var declipDetail: String {

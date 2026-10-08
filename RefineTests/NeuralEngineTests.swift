@@ -73,6 +73,10 @@ struct ApolloTests {
         settings.engine = .apollo
         settings.intensity = 1
         settings.declip = false
+        // Compare the network alone: finishing stages are tested separately.
+        settings.extendBandwidth = false
+        settings.restoreTransients = false
+        settings.restoreStereo = false
         settings.exportFormat = .wav
         let analysis = SignalFixtures.analysis(of: [0])
         let destination = URL.temporaryDirectory.appending(path: "\(UUID().uuidString).wav")

@@ -27,7 +27,10 @@ struct TrackDetailView: View {
                     ContentUnavailableView("Lecture impossible", systemImage: "exclamationmark.triangle", description: Text(failure))
                 } else {
                     if let analysis = track.analysis {
-                        VerdictCard(analysis: analysis, restoredAnalysis: track.restoredAnalysis, restoredEngine: track.restoredEngine)
+                        VerdictCard(
+                            analysis: analysis, restoredAnalysis: track.restoredAnalysis,
+                            restoredEngine: track.restoredEngine,
+                            notes: track.restorationNotes?.components(separatedBy: "\n") ?? [])
                     }
                     spectrumSection
                     actions
@@ -117,7 +120,7 @@ struct TrackDetailView: View {
                 original: originalSpectrogram,
                 restored: restoredSpectrogram,
                 preview: restoration?.preview?.cgImage,
-                progress: restoration?.fraction,
+                progress: restoration.map { $0.stage == .engine ? $0.previewCoverage : 1 },
                 cutoff: track.analysis?.cutoffFrequency,
                 playhead: player.duration > 0 && (player.isPlaying || player.currentTime > 0)
                     ? player.currentTime / player.duration : nil,
@@ -130,9 +133,8 @@ struct TrackDetailView: View {
         if let restoration {
             VStack(spacing: 12) {
                 ProgressView(value: restoration.fraction) {
-                    Label(
-                        restoration.engine == .apollo ? "Restauration par l'IA…" : "Reconstruction des aigus…",
-                        systemImage: restoration.engine == .apollo ? "brain" : "wand.and.sparkles")
+                    Label(restoration.title, systemImage: restoration.systemImage)
+                        .contentTransition(.symbolEffect(.replace))
                         .symbolEffect(.pulse)
                 } currentValueLabel: {
                     Text(restoration.fraction.formatted(.percent.precision(.fractionLength(0))))
@@ -241,5 +243,23 @@ struct ArtworkView: View {
         .aspectRatio(1, contentMode: .fit)
         .clipShape(.rect(cornerRadius: cornerRadius))
         .accessibilityHidden(true)
+    }
+}
+
+private extension TrackProcessor.RestorationState {
+    var title: String {
+        switch (stage, engine) {
+        case (.finishing, _): "Finitions : attaques, espace, brillance…"
+        case (.engine, .apollo): "Restauration par l'IA…"
+        case (.engine, .signal): "Reconstruction des aigus…"
+        }
+    }
+
+    var systemImage: String {
+        switch (stage, engine) {
+        case (.finishing, _): "slider.horizontal.3"
+        case (.engine, .apollo): "brain"
+        case (.engine, .signal): "wand.and.sparkles"
+        }
     }
 }
