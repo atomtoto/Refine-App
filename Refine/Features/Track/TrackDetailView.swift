@@ -27,7 +27,7 @@ struct TrackDetailView: View {
                     ContentUnavailableView("Lecture impossible", systemImage: "exclamationmark.triangle", description: Text(failure))
                 } else {
                     if let analysis = track.analysis {
-                        VerdictCard(analysis: analysis, restoredAnalysis: track.restoredAnalysis)
+                        VerdictCard(analysis: analysis, restoredAnalysis: track.restoredAnalysis, restoredEngine: track.restoredEngine)
                     }
                     spectrumSection
                     actions
@@ -130,7 +130,9 @@ struct TrackDetailView: View {
         if let restoration {
             VStack(spacing: 12) {
                 ProgressView(value: restoration.fraction) {
-                    Label("Reconstruction des aigus…", systemImage: "wand.and.sparkles")
+                    Label(
+                        restoration.engine == .apollo ? "Restauration par l'IA…" : "Reconstruction des aigus…",
+                        systemImage: restoration.engine == .apollo ? "brain" : "wand.and.sparkles")
                         .symbolEffect(.pulse)
                 } currentValueLabel: {
                     Text(restoration.fraction.formatted(.percent.precision(.fractionLength(0))))
@@ -166,8 +168,12 @@ struct TrackDetailView: View {
                         .buttonStyle(.glassProminent)
                         .controlSize(.large)
 
-                        Button("Réglages de restauration", systemImage: "slider.horizontal.3") { showingSettings = true }
-                            .buttonStyle(.glass)
+                        Button {
+                            showingSettings = true
+                        } label: {
+                            Label("Réglages · \(track.settings.engine.title)", systemImage: track.settings.engine.systemImage)
+                        }
+                        .buttonStyle(.glass)
                     }
                 }
             }

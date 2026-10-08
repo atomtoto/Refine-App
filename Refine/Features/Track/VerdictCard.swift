@@ -3,6 +3,7 @@ import SwiftUI
 struct VerdictCard: View {
     var analysis: AudioAnalysis
     var restoredAnalysis: AudioAnalysis?
+    var restoredEngine: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -46,7 +47,7 @@ struct VerdictCard: View {
             if let restoredAnalysis {
                 Divider()
                 Label {
-                    Text("Après Refine : spectre étendu jusqu'à \(restoredAnalysis.cutoffFrequency.kilohertz), en 16 bits · 44,1 kHz.")
+                    Text("Après Refine\(restoredEngine.map { " (\($0))" } ?? "") : spectre étendu jusqu'à \(restoredAnalysis.cutoffFrequency.kilohertz), en \(restoredAnalysis.codec == .aac ? "AAC 256 kbps" : "16 bits · 44,1 kHz").")
                 } icon: {
                     Image(systemName: "sparkles")
                         .foregroundStyle(.tint)

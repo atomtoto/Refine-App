@@ -4,14 +4,16 @@ Refine is an iOS app that enhances and restores music quality from your audio fi
 ## Ce que fait l'app
 
 - **Analyse du spectre** : détecte la coupure laissée par l'encodeur (≈ 16–17 kHz à 128 kbps), estime le débit d'origine et repère les « faux lossless » (FLAC/WAV issus d'un MP3).
-- **Restauration on-device** (Accelerate/vDSP, aucune donnée envoyée) :
-  - réparation des crêtes écrêtées (interpolation de Hermite) ;
-  - comblement des trous spectraux dus à la quantification MP3 ;
-  - reconstruction des aigus par réplication de bande (SBR), avec une pente extrapolée du spectre réel ;
-  - conversion 16 bits / 44,1 kHz avec dither TPDF, export ALAC ou WAV.
+- **Deux moteurs, 100 % sur l'iPhone** (aucune donnée envoyée, aucun compte) :
+  - **IA Apollo** (par défaut) : réseau de neurones [Apollo](https://github.com/JusperLee/Apollo) entraîné à restaurer
+    les MP3 (24–128 kbps), converti en Core ML et exécuté sur le GPU. Reconstruit les aigus et corrige les artefacts
+    de compression sur tout le spectre. Voir `Tools/ConvertApollo` et `THIRD_PARTY_NOTICES.md` (CC BY-SA 4.0).
+  - **Traitement du signal** (Accelerate/vDSP), instantané :
+    réparation des crêtes écrêtées, comblement des trous spectraux, reconstruction des aigus par réplication de bande.
+- **Export** 16 bits / 44,1 kHz avec dither TPDF : ALAC, WAV, ou AAC 256 kbps (le format d'Apple Music et des AirPods).
 - **Comparaison** : spectrogramme avant/après avec séparateur glissable, écoute A/B synchronisée sans coupure.
 
-> Les données supprimées par la compression ne peuvent pas être récupérées à l'identique : Refine les reconstruit de façon plausible. Le protocole `RestorationEngine` permet de brancher plus tard un modèle Core ML (voir `NeuralRestorationEngine`).
+> Les données supprimées par la compression ne peuvent pas être récupérées à l'identique : Refine les reconstruit de façon plausible. D'autres moteurs peuvent être ajoutés derrière le protocole `RestorationEngine` ; un modèle spectral se branche via `SpectralModel` et `SpectralBlockProcessor`.
 
 ## Développement
 

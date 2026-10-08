@@ -32,7 +32,7 @@ struct PipelineTests {
         #expect(output.spectrogramPNG != nil)
     }
 
-    @Test(arguments: [RestorationSettings.ExportFormat.alac, .wav])
+    @Test(arguments: [RestorationSettings.ExportFormat.alac, .aac, .wav])
     func restoresToCDFormat(format: RestorationSettings.ExportFormat) async throws {
         let source = try makeBandLimitedFile(sampleRate: 48_000)
         let destination = temporaryURL(format.fileExtension)
@@ -56,7 +56,12 @@ struct PipelineTests {
         let description = restored.fileFormat.streamDescription.pointee
         #expect(restored.fileFormat.sampleRate == 44_100)
         #expect(restored.fileFormat.channelCount == 2)
-        #expect(description.mFormatID == (format == .alac ? kAudioFormatAppleLossless : kAudioFormatLinearPCM))
+        let expectedFormat = switch format {
+        case .alac: kAudioFormatAppleLossless
+        case .aac: kAudioFormatMPEG4AAC
+        case .wav: kAudioFormatLinearPCM
+        }
+        #expect(description.mFormatID == expectedFormat)
         #expect(abs(Double(restored.length) / 44_100 - sourceDuration) < 0.01)
         #expect(fractions == fractions.sorted())
         #expect((output?.analysis.cutoffFrequency ?? 0) > 19_500)
