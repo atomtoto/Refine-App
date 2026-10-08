@@ -26,10 +26,10 @@
           "image-name" : "Chevrons.svg",
           "name" : "Chevrons",
           "position" : {
-            "scale" : 1,
+            "scale" : 1.3,
             "translation-in-points" : [
               0,
-              0
+              -29
             ]
           }
         },
@@ -51,10 +51,10 @@
           "image-name" : "Knob.svg",
           "name" : "Knob",
           "position" : {
-            "scale" : 1,
+            "scale" : 1.3,
             "translation-in-points" : [
               0,
-              0
+              -29
             ]
           }
         },
@@ -82,10 +82,10 @@
           "image-name" : "Divider.svg",
           "name" : "Divider",
           "position" : {
-            "scale" : 1,
+            "scale" : 1.3,
             "translation-in-points" : [
               0,
-              0
+              142
             ]
           }
         }
@@ -106,10 +106,10 @@
           "image-name" : "Cutoff.svg",
           "name" : "Cutoff",
           "position" : {
-            "scale" : 1,
+            "scale" : 1.5,
             "translation-in-points" : [
               0,
-              0
+              54
             ]
           }
         },
@@ -129,10 +129,10 @@
           "image-name" : "Spectrum.svg",
           "name" : "Spectrum",
           "position" : {
-            "scale" : 1,
+            "scale" : 1.2,
             "translation-in-points" : [
               0,
-              0
+              129
             ]
           }
         }
