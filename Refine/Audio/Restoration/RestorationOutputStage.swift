@@ -1,7 +1,7 @@
 import Foundation
 
 /// The tail every restoration shares: peak protection, 16-bit dither, file writing, and the analysis of the
-/// final file.
+/// final file, loudness included, so playback can compare both versions at the same level.
 final class RestorationOutputStage {
     private let writer: AudioWriter
     private let format: RestorationSettings.ExportFormat
@@ -11,6 +11,7 @@ final class RestorationOutputStage {
     private let events: (RestorationEvent) -> Void
     private var conditioner = OutputConditioner()
     private var levels = LevelStatistics()
+    private let loudness = LoudnessMeter()
     private var lastReport = 0.0
     private var writtenFrames = 0
 
@@ -30,6 +31,7 @@ final class RestorationOutputStage {
             writtenFrames += frames
             let conditioned = channels.map { $0.map(OutputConditioner.softClip) }
             levels.consume(conditioned)
+            loudness.consume(conditioned)
             collector.consume(AudioReader.mixdown(conditioned))
             try writer.write(conditioner.process(channels))
         }
@@ -44,7 +46,7 @@ final class RestorationOutputStage {
     func finish(engine: String, notes: [String]) -> RestorationOutput {
         writer.close()
         let analysis = AudioAnalyzer.makeAnalysis(
-            collector: collector, levels: levels, codec: format.codec,
+            collector: collector, levels: levels, loudness: loudness, codec: format.codec,
             sourceSampleRate: AudioReader.targetSampleRate, channelCount: AudioWriter.channelCount)
         return RestorationOutput(
             analysis: analysis,

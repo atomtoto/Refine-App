@@ -6,7 +6,7 @@ import AVFoundation
 ///    destination, while the Mid/Side statistics of its output are gathered and the spectrogram paints itself.
 /// 2. The finishing stages, tuned from those statistics, run over that file on the way to the final export.
 ///
-/// The second pass is cheap: it's equalisation and transient work, no neural network.
+/// The second pass is cheap: equalisation, transient and dynamics work, no neural network.
 enum RestorationPipeline {
     /// Hands the engine's restored blocks to the first pass.
     typealias Sink = (_ channels: [[Float]]) throws -> Void
@@ -31,8 +31,8 @@ enum RestorationPipeline {
         try Task.checkCancellation()
 
         let chain = EnhancementChain(
-            settings: job.settings, analysis: job.analysis,
-            statistics: firstPass.statistics, channelCount: reader.channelCount)
+            settings: job.settings, analysis: job.analysis, statistics: firstPass.statistics,
+            loudness: firstPass.loudness.profile, channelCount: reader.channelCount)
         let restored = try AudioReader(url: intermediateURL)
         let output = try RestorationOutputStage(
             destination: job.destination, format: job.settings.exportFormat,
@@ -46,9 +46,10 @@ enum RestorationPipeline {
     }
 }
 
-/// First-pass sink: a float32 CAF, Mid/Side statistics, and the live spectrogram.
+/// First-pass sink: a float32 CAF, Mid/Side statistics, loudness, and the live spectrogram.
 final class IntermediateStage {
     let statistics = StereoStatistics()
+    let loudness = LoudnessMeter()
 
     private var file: AVAudioFile?
     private let buffer: AVAudioPCMBuffer
@@ -97,6 +98,7 @@ final class IntermediateStage {
             offset += count
         }
         statistics.consume(channels)
+        loudness.consume(channels)
         collector.consume(AudioReader.mixdown(channels.map { $0.map(OutputConditioner.softClip) }))
         writtenFrames += frames
 

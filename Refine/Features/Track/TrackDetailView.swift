@@ -73,7 +73,7 @@ struct TrackDetailView: View {
             palette = await ArtworkPalette.colors(from: track.artworkData)
                 ?? ArtworkPalette.vinyl(hue: VinylView.hue(for: track.id))
         }
-        .task(id: MediaKey(analyzed: track.analysisData != nil, restoredAt: track.restoredAt)) {
+        .task(id: MediaKey(analysis: track.analysisData, restoredAt: track.restoredAt)) {
             loadMedia()
         }
         .onDisappear { player.stop() }
@@ -201,7 +201,7 @@ struct TrackDetailView: View {
     // MARK: - Loading
 
     private struct MediaKey: Hashable {
-        var analyzed: Bool
+        var analysis: Data?
         var restoredAt: Date?
     }
 
@@ -212,6 +212,9 @@ struct TrackDetailView: View {
         let wasPlaying = player.isPlaying
         let position = player.currentTime
         try? player.load(original: track.originalURL, restored: track.restoredURL)
+        player.matchLoudness(
+            original: track.analysis?.loudness?.integrated,
+            restored: track.isRestored ? track.restoredAnalysis?.loudness?.integrated : nil)
         if track.isRestored { player.source = .restored }
         player.seek(to: position)
         if wasPlaying { player.play() }
@@ -245,7 +248,7 @@ struct ArtworkView: View {
 private extension TrackProcessor.RestorationState {
     var title: String {
         switch (stage, engine) {
-        case (.finishing, _): "Finitions : attaques, espace, brillance…"
+        case (.finishing, _): "Finitions : équilibre, attaques, punch, volume…"
         case (.engine, .apollo): "Restauration par l'IA…"
         case (.engine, .signal): "Reconstruction des aigus…"
         }

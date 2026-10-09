@@ -102,7 +102,7 @@ struct RestorationSettings: Codable, Hashable, Sendable {
     var engine: Engine = ApolloModel.isBundled ? .apollo : .signal
     var computeUnits: ComputeUnits = .gpu
     var preset: Preset = .balanced
-    /// How strongly the reconstructed content is mixed in, 0.1…1.
+    /// How strongly the finishing and remastering stages act, 0.1…1.
     var intensity: Double = Preset.balanced.intensity
     /// Signal engine: band replication. Both engines: bring the rebuilt highs to a natural level.
     var extendBandwidth = true
@@ -110,6 +110,12 @@ struct RestorationSettings: Codable, Hashable, Sendable {
     var restoreTransients = true
     var restoreStereo = true
     var declip = true
+    /// Remaster: correct a dull, boomy or muddy balance.
+    var rebalanceTone = true
+    /// Remaster: bring the attacks of a squashed master back.
+    var restorePunch = true
+    /// Remaster: raise a weak master, make room for restored attacks, and limit true peaks to −1 dBTP.
+    var adjustLoudness = true
     var exportFormat: ExportFormat = .alac
 
     init() {}
@@ -118,7 +124,7 @@ struct RestorationSettings: Codable, Hashable, Sendable {
 extension RestorationSettings {
     private enum CodingKeys: String, CodingKey {
         case engine, computeUnits, preset, intensity, extendBandwidth, fillSpectralHoles, restoreTransients,
-             restoreStereo, declip, exportFormat
+             restoreStereo, declip, rebalanceTone, restorePunch, adjustLoudness, exportFormat
     }
 
     /// Missing or unknown keys fall back to defaults, so settings saved by older versions still load.
@@ -137,6 +143,9 @@ extension RestorationSettings {
         restoreTransients = value(.restoreTransients, defaults.restoreTransients)
         restoreStereo = value(.restoreStereo, defaults.restoreStereo)
         declip = value(.declip, defaults.declip)
+        rebalanceTone = value(.rebalanceTone, defaults.rebalanceTone)
+        restorePunch = value(.restorePunch, defaults.restorePunch)
+        adjustLoudness = value(.adjustLoudness, defaults.adjustLoudness)
         exportFormat = value(.exportFormat, defaults.exportFormat)
         if !engine.isAvailable { engine = .signal }
     }

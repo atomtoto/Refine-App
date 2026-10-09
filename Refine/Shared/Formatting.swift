@@ -6,6 +6,11 @@ extension Double {
         "\((self / 1000).formatted(.number.precision(.fractionLength(1)))) kHz"
     }
 
+    /// "3 dB", "2,5 dB"
+    var decibels: String {
+        "\(formatted(.number.precision(.fractionLength(0...1)))) dB"
+    }
+
     /// "3:42"
     var playbackTime: String {
         Duration.seconds(max(self, 0)).formatted(.time(pattern: .minuteSecond))

@@ -12,18 +12,23 @@ enum AudioAnalyzer {
         let reader = try AudioReader(url: url)
         let collector = SpectrumCollector(sampleRate: AudioReader.targetSampleRate, expectedSamples: reader.estimatedFrameCount)
         let stereo = StereoStatistics()
+        let meter = LoudnessMeter()
         var levels = LevelStatistics()
 
         while let block = try reader.read(maxFrames: 65_536) {
             try Task.checkCancellation()
             levels.consume(block)
+            meter.consume(block)
             collector.consume(AudioReader.mixdown(block))
-            if reader.channelCount > 1 { stereo.consume(block) }
+            stereo.consume(block)
         }
 
         var analysis = makeAnalysis(
-            collector: collector, levels: levels, codec: reader.codec,
+            collector: collector, levels: levels, loudness: meter, codec: reader.codec,
             sourceSampleRate: reader.sourceSampleRate, channelCount: reader.channelCount)
+        analysis.tonal = TonalProfile.measure(
+            averagePower: zip(stereo.averageMid, stereo.averageSide).map { $0 + $1 },
+            binWidth: stereo.binWidth, cutoff: analysis.cutoffFrequency)
         analysis.stereo = reader.channelCount > 1
             ? StereoProfile.measure(
                 mid: stereo.averageMid, side: stereo.averageSide, binWidth: stereo.binWidth,
@@ -33,11 +38,11 @@ enum AudioAnalyzer {
     }
 
     static func makeAnalysis(
-        collector: SpectrumCollector, levels: LevelStatistics, codec: AudioCodec,
+        collector: SpectrumCollector, levels: LevelStatistics, loudness: LoudnessMeter? = nil, codec: AudioCodec,
         sourceSampleRate: Double, channelCount: Int
     ) -> AudioAnalysis {
         let detection = CutoffDetector.detect(averagePower: collector.averagePower, sampleRate: collector.sampleRate)
-        return AudioAnalysis(
+        var analysis = AudioAnalysis(
             codec: codec,
             sourceSampleRate: sourceSampleRate,
             channelCount: channelCount,
@@ -49,5 +54,7 @@ enum AudioAnalyzer {
             peak: Double(levels.peak),
             verdict: AudioAnalysis.verdict(cutoff: detection.cutoff, codec: codec),
             estimatedBitrate: AudioAnalysis.estimatedBitrate(forCutoff: detection.cutoff))
+        analysis.loudness = loudness?.profile
+        return analysis
     }
 }

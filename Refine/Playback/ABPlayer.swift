@@ -19,6 +19,8 @@ final class ABPlayer {
     private(set) var level: Float = 0
     /// Bluetooth headphones re-encode everything, which narrows the audible gap between versions.
     private(set) var isBluetoothOutput = false
+    /// Whether the louder version is turned down to the other's loudness, so neither wins by volume alone.
+    private(set) var isLoudnessMatched = false
     var source: Source = .original {
         didSet { if source != oldValue { crossfade() } }
     }
@@ -32,6 +34,8 @@ final class ABPlayer {
     @ObservationIgnored private var generation = 0
     @ObservationIgnored private var ticker: Task<Void, Never>?
     @ObservationIgnored private var fade: Task<Void, Never>?
+    @ObservationIgnored private var restoredMix: Float = 0
+    @ObservationIgnored private var trims: (original: Float, restored: Float) = (1, 1)
 
     init() {
         engine.attach(originalNode)
@@ -69,6 +73,19 @@ final class ABPlayer {
             Task { @MainActor in self?.updateLevel(rms) }
         })
         engine.prepare()
+    }
+
+    /// Levels both versions to the quieter one's loudness (in LUFS). Differences under 0.5 LU are left alone.
+    func matchLoudness(original: Double?, restored: Double?) {
+        if let original, let restored, original > -70, restored > -70, abs(original - restored) >= 0.5 {
+            let quieter = min(original, restored)
+            trims = (Float(pow(10, (quieter - original) / 20)), Float(pow(10, (quieter - restored) / 20)))
+            isLoudnessMatched = true
+        } else {
+            trims = (1, 1)
+            isLoudnessMatched = false
+        }
+        applyVolumes(restoredMix: restoredMix)
     }
 
     func togglePlayback() {
@@ -177,7 +194,7 @@ final class ABPlayer {
 
     private func crossfade() {
         let target: Float = source == .restored ? 1 : 0
-        let from = restoredNode.volume
+        let from = restoredMix
         fade?.cancel()
         fade = Task { [weak self] in
             let steps = 8
@@ -190,8 +207,9 @@ final class ABPlayer {
     }
 
     private func applyVolumes(restoredMix: Float) {
-        restoredNode.volume = restoredMix
-        originalNode.volume = 1 - restoredMix
+        self.restoredMix = restoredMix
+        restoredNode.volume = restoredMix * trims.restored
+        originalNode.volume = (1 - restoredMix) * trims.original
     }
 
     // MARK: - Level

@@ -54,6 +54,13 @@ struct PlayerDeck: View {
                 }
             }
 
+            if player.hasRestored, player.isLoudnessMatched {
+                Label("Volumes égalisés pour une comparaison honnête.", systemImage: "speaker.wave.2")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
             if player.isBluetoothOutput {
                 Label("Écoute Bluetooth : le casque recompresse le son. Comparez de préférence en filaire.", systemImage: "headphones")
                     .font(.caption)

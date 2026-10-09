@@ -4,6 +4,7 @@ Refine is an iOS app that enhances and restores music quality from your audio fi
 ## Ce que fait l'app
 
 - **Analyse du spectre** : détecte la coupure laissée par l'encodeur (≈ 16–17 kHz à 128 kbps), estime le débit d'origine, repère les « faux lossless » (FLAC/WAV issus d'un MP3) et mesure la largeur stéréo.
+- **Diagnostic du master** : sonie et true peak (ITU-R BS.1770 / EBU R 128), punch (crête/RMS), et équilibre tonal comparé à la moyenne de masters actuels (sourd, chargé en grave, maigre…).
 - **Deux moteurs, 100 % sur l'iPhone** (aucune donnée envoyée, aucun compte) :
   - **IA Apollo** (par défaut) : réseau de neurones [Apollo](https://github.com/JusperLee/Apollo) entraîné à restaurer
     les MP3 (24–128 kbps), converti en Core ML et exécuté sur le GPU. Reconstruit les aigus et corrige les artefacts
@@ -14,8 +15,12 @@ Refine is an iOS app that enhances and restores music quality from your audio fi
   - **Attaques** : retire le pré-écho, ce souffle que le MP3 étale juste avant les percussions ;
   - **Brillance** : ramène les aigus reconstruits au niveau que prédit la pente du spectre ;
   - **Espace** : rouvre l'image stéréo si l'encodeur l'a resserrée dans les aigus (rien n'est fait sinon).
+- **Remastering**, seulement pour les défauts détectés (un bon master ressort tel quel) :
+  - **Équilibre tonal** : redonne de la clarté à un son sourd, allège un grave ou un bas-médium en excès ;
+  - **Punch** : rend leurs attaques aux masters écrasés par le limiteur (transient shaper sur trois bandes) ;
+  - **Volume** : remonte un master trop faible vers −14 LUFS, avec un limiteur true peak à −1 dBTP.
 - **Export** 16 bits / 44,1 kHz avec dither TPDF : ALAC, WAV, ou AAC 256 kbps (le format d'Apple Music et des AirPods).
-- **Comparaison** : spectrogramme avant/après avec séparateur glissable, écoute A/B synchronisée sans coupure.
+- **Comparaison** : spectrogramme avant/après avec séparateur glissable, écoute A/B synchronisée sans coupure et à volume égal, pour que la version la plus forte ne paraisse pas meilleure à tort.
 
 > Les données supprimées par la compression ne peuvent pas être récupérées à l'identique : Refine les reconstruit de façon plausible. D'autres moteurs peuvent être ajoutés derrière le protocole `RestorationEngine` ; un modèle spectral se branche via `SpectralModel` et `SpectralBlockProcessor`.
 

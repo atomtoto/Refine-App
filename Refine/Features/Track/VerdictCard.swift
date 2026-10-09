@@ -44,6 +44,12 @@ struct VerdictCard: View {
                     Fact(title: "Stéréo", value: stereoDescription)
                     Fact(title: "Saturation", value: analysis.isClipped ? "Détectée" : "Aucune")
                 }
+                if analysis.tonal != nil || analysis.loudness != nil {
+                    GridRow {
+                        Fact(title: "Tonalité", value: analysis.tonal?.title ?? "—")
+                        Fact(title: "Dynamique", value: analysis.loudness?.title ?? "—")
+                    }
+                }
             }
 
             if let restoredAnalysis {
@@ -97,6 +103,30 @@ struct VerdictCard: View {
             return "La coupure à \(cutoff) est presque inaudible. La restauration aura un effet subtil."
         case .lossy:
             return "La compression a supprimé tout ce qui dépasse \(cutoff) (source \(source)). Refine peut reconstruire ces aigus."
+        }
+    }
+}
+
+extension TonalProfile {
+    var title: String {
+        switch kind {
+        case .dull: "Sourde"
+        case .balanced: "Équilibrée"
+        case .bright: "Brillante"
+        case .heavy: "Chargée en grave"
+        case .thin: "Maigre"
+        }
+    }
+}
+
+extension LoudnessProfile {
+    /// "Écrasée · −8,1 LUFS"
+    var title: String {
+        let level = "\(integrated.formatted(.number.precision(.fractionLength(1)))) LUFS"
+        switch kind {
+        case .squashed: return "Écrasée · \(level)"
+        case .natural: return "Naturelle · \(level)"
+        case .weak: return "Faible · \(level)"
         }
     }
 }

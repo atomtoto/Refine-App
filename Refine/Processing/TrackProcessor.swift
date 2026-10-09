@@ -53,7 +53,8 @@ final class TrackProcessor {
             TrackFiles.removeLeftovers(for: track.id)
             guard track.failureMessage == nil, !analyzing.contains(track.id) else { continue }
             let hasSpectrogram = FileManager.default.fileExists(atPath: track.originalSpectrogramURL.path(percentEncoded: false))
-            if track.analysis == nil || !hasSpectrogram { analyze(track) }
+            // Analyses from before the loudness and tonal diagnostics are refreshed too.
+            if track.analysis?.loudness == nil || !hasSpectrogram { analyze(track) }
         }
     }
 

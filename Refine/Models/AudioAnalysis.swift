@@ -68,6 +68,10 @@ struct AudioAnalysis: Codable, Hashable, Sendable {
     var estimatedBitrate: Int?
     /// Stereo width and where it collapses. Absent from analyses made before it existed.
     var stereo: StereoProfile?
+    /// Loudness, true peak and punch. Absent from analyses made before it existed.
+    var loudness: LoudnessProfile?
+    /// Tonal balance against modern masters. Absent from analyses made before it existed.
+    var tonal: TonalProfile?
 
     /// 0…1 score of how much of the CD band is intact.
     var fidelity: Double {

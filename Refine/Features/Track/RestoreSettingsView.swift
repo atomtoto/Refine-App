@@ -64,7 +64,7 @@ struct RestoreSettingsView: View {
                 } header: {
                     Text("Intensité")
                 } footer: {
-                    Text("Dose les finitions : brillance des aigus, attaques, espace stéréo. « Subtil » reste au plus près de l'original.")
+                    Text("Dose les finitions et le remastering. « Subtil » reste au plus près de l'original.")
                 }
 
                 Section {
@@ -119,6 +119,37 @@ struct RestoreSettingsView: View {
                 }
 
                 Section {
+                    Toggle(isOn: $settings.rebalanceTone) {
+                        Label {
+                            Text("Rééquilibrer le son")
+                            Text(toneDetail).font(.footnote)
+                        } icon: {
+                            Image(systemName: "slider.vertical.3")
+                        }
+                    }
+                    Toggle(isOn: $settings.restorePunch) {
+                        Label {
+                            Text("Redonner du punch")
+                            Text(punchDetail).font(.footnote)
+                        } icon: {
+                            Image(systemName: "bolt")
+                        }
+                    }
+                    Toggle(isOn: $settings.adjustLoudness) {
+                        Label {
+                            Text("Ajuster le volume")
+                            Text(loudnessDetail).font(.footnote)
+                        } icon: {
+                            Image(systemName: "speaker.wave.2")
+                        }
+                    }
+                } header: {
+                    Text("Remasteriser")
+                } footer: {
+                    Text("Seuls les défauts détectés sont corrigés : un morceau déjà bien masterisé ressort tel quel.")
+                }
+
+                Section {
                     Picker("Format", selection: $settings.exportFormat) {
                         ForEach(RestorationSettings.ExportFormat.allCases) { format in
                             Text(format.title).tag(format)
@@ -164,6 +195,36 @@ struct RestoreSettingsView: View {
             return "Image stéréo intacte : rien à corriger."
         case .mono:
             return "Fichier mono : rien à élargir."
+        }
+    }
+
+    private var toneDetail: String {
+        guard let tonal = analysis?.tonal else { return "Corrige un son sourd, trop chargé en grave ou confus." }
+        switch tonal.kind {
+        case .dull: return "Son sourd : \((-tonal.presenceOffset).decibels) de présence en moins qu'un master actuel."
+        case .bright: return "Son plus brillant que la moyenne : les aigus seront légèrement adoucis."
+        case .heavy: return "Grave ou bas-médium en excès : ils seront allégés."
+        case .thin: return "Grave en retrait : il sera renforcé."
+        case .balanced: return "Équilibre déjà naturel : rien à corriger."
+        }
+    }
+
+    private var punchDetail: String {
+        guard let loudness = analysis?.loudness else { return "Rend leurs attaques aux morceaux trop compressés." }
+        return loudness.kind == .squashed
+            ? "Master écrasé (crête à \(loudness.crest.decibels) du niveau moyen) : les attaques seront ravivées."
+            : "Dynamique préservée : rien à raviver."
+    }
+
+    private var loudnessDetail: String {
+        guard let loudness = analysis?.loudness else { return "Remonte un morceau trop faible et protège les crêtes." }
+        switch loudness.kind {
+        case .weak:
+            return "Morceau faible (\(Int(loudness.integrated.rounded())) LUFS) : remonté vers \(Int(LoudnessProfile.targetLoudness)) LUFS, crêtes limitées à −1 dBTP."
+        case .squashed:
+            return "Baisse légèrement le volume pour laisser place aux attaques ; crêtes limitées à −1 dBTP."
+        case .natural:
+            return "Volume conservé ; crêtes limitées à −1 dBTP."
         }
     }
 

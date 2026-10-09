@@ -77,6 +77,9 @@ struct ApolloTests {
         settings.extendBandwidth = false
         settings.restoreTransients = false
         settings.restoreStereo = false
+        settings.rebalanceTone = false
+        settings.restorePunch = false
+        settings.adjustLoudness = false
         settings.exportFormat = .wav
         let analysis = SignalFixtures.analysis(of: [0])
         let destination = URL.temporaryDirectory.appending(path: "\(UUID().uuidString).wav")

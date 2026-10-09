@@ -42,6 +42,9 @@ private func settings(air: Bool = false, stereo: Bool = false, transients: Bool 
     settings.extendBandwidth = air
     settings.restoreStereo = stereo
     settings.restoreTransients = transients
+    settings.rebalanceTone = false
+    settings.restorePunch = false
+    settings.adjustLoudness = false
     return settings
 }
 

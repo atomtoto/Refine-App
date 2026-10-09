@@ -19,10 +19,17 @@ struct AirEqualizer {
     /// - Parameters:
     ///   - averagePower: long-term power spectrum of the restored signal, any FFT size.
     ///   - cutoff: the source file's cutoff, where the rebuilt band starts.
-    static func make(averagePower: [Double], binWidth: Double, cutoff: Double, amount: Double) -> AirEqualizer? {
+    ///   - correction: equalisation applied alongside, in dB: the target extends the *corrected* slope, or a
+    ///     dull mix would stay dull above its cutoff.
+    static func make(
+        averagePower: [Double], binWidth: Double, cutoff: Double, amount: Double,
+        correction: (Double) -> Double = { _ in 0 }
+    ) -> AirEqualizer? {
         guard cutoff < CutoffDetector.transparentFrequency, averagePower.count > 16, amount > 0 else { return nil }
 
-        let raw = averagePower.map { max(10 * log10(max($0, 1e-30)), -200) }
+        let raw = averagePower.indices.map { k in
+            max(10 * log10(max(averagePower[k], 1e-30)), -200) + correction(Double(k) * binWidth)
+        }
         let slope = CutoffDetector.slope(CutoffDetector.smoothed(raw, radius: 4), binWidth: binWidth, upTo: cutoff)
         let measured = smoothedByOctaveFraction(raw, binWidth: binWidth, fraction: 12)
 
