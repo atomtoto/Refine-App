@@ -71,6 +71,7 @@ struct TrackDetailView: View {
         }
         .task(id: track.artworkData) {
             palette = await ArtworkPalette.colors(from: track.artworkData)
+                ?? ArtworkPalette.vinyl(hue: VinylView.hue(for: track.id))
         }
         .task(id: MediaKey(analyzed: track.analysisData != nil, restoredAt: track.restoredAt)) {
             loadMedia()
@@ -83,7 +84,7 @@ struct TrackDetailView: View {
 
     private var header: some View {
         VStack(spacing: 14) {
-            ArtworkView(data: track.artworkData, cornerRadius: 24)
+            ArtworkView(data: track.artworkData, cornerRadius: 24, seed: track.id, spinning: player.isPlaying)
                 .frame(maxWidth: 200)
                 .shadow(color: .black.opacity(0.25), radius: 20, y: 10)
 
@@ -217,10 +218,13 @@ struct TrackDetailView: View {
     }
 }
 
-/// Square artwork, or a tinted placeholder.
+/// Square artwork, or a vinyl in the track's own colour.
 struct ArtworkView: View {
     var data: Data?
     var cornerRadius: CGFloat
+    /// Picks the vinyl's colour when there is no artwork.
+    var seed: UUID
+    var spinning = false
 
     var body: some View {
         Group {
@@ -228,20 +232,12 @@ struct ArtworkView: View {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
+                    .aspectRatio(1, contentMode: .fit)
+                    .clipShape(.rect(cornerRadius: cornerRadius))
             } else {
-                Rectangle()
-                    .fill(Color.accentColor.gradient)
-                    .overlay {
-                        Image(systemName: "music.note")
-                            .font(.system(size: 200))
-                            .minimumScaleFactor(0.1)
-                            .padding(24)
-                            .foregroundStyle(.white.opacity(0.85))
-                    }
+                VinylView(hue: VinylView.hue(for: seed), spinning: spinning)
             }
         }
-        .aspectRatio(1, contentMode: .fit)
-        .clipShape(.rect(cornerRadius: cornerRadius))
         .accessibilityHidden(true)
     }
 }

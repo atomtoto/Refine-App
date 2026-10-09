@@ -46,6 +46,17 @@ final class TrackProcessor {
 
     // MARK: - Analysis
 
+    /// Picks up what a previous launch left unfinished: analyses cut short (the spectrum would otherwise wait
+    /// forever) and the working files of interrupted restorations.
+    func resumeInterruptedWork(_ tracks: [Track]) {
+        for track in tracks where restorations[track.id] == nil {
+            TrackFiles.removeLeftovers(for: track.id)
+            guard track.failureMessage == nil, !analyzing.contains(track.id) else { continue }
+            let hasSpectrogram = FileManager.default.fileExists(atPath: track.originalSpectrogramURL.path(percentEncoded: false))
+            if track.analysis == nil || !hasSpectrogram { analyze(track) }
+        }
+    }
+
     func analyze(_ track: Track) {
         let id = track.id
         let url = track.originalURL
