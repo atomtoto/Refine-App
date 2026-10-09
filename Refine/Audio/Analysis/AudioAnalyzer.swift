@@ -11,17 +11,24 @@ enum AudioAnalyzer {
     static func analyze(url: URL) async throws -> AnalysisOutput {
         let reader = try AudioReader(url: url)
         let collector = SpectrumCollector(sampleRate: AudioReader.targetSampleRate, expectedSamples: reader.estimatedFrameCount)
+        let stereo = StereoStatistics()
         var levels = LevelStatistics()
 
         while let block = try reader.read(maxFrames: 65_536) {
             try Task.checkCancellation()
             levels.consume(block)
             collector.consume(AudioReader.mixdown(block))
+            if reader.channelCount > 1 { stereo.consume(block) }
         }
 
-        let analysis = makeAnalysis(
+        var analysis = makeAnalysis(
             collector: collector, levels: levels, codec: reader.codec,
             sourceSampleRate: reader.sourceSampleRate, channelCount: reader.channelCount)
+        analysis.stereo = reader.channelCount > 1
+            ? StereoProfile.measure(
+                mid: stereo.averageMid, side: stereo.averageSide, binWidth: stereo.binWidth,
+                upTo: min(analysis.cutoffFrequency, 20_000))
+            : StereoProfile(kind: .mono, referenceRatio: -100)
         return AnalysisOutput(analysis: analysis, spectrogramPNG: collector.makeImage().flatMap(SpectrogramRenderer.pngData))
     }
 

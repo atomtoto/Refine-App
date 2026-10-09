@@ -104,8 +104,11 @@ struct RestorationSettings: Codable, Hashable, Sendable {
     var preset: Preset = .balanced
     /// How strongly the reconstructed content is mixed in, 0.1…1.
     var intensity: Double = Preset.balanced.intensity
+    /// Signal engine: band replication. Both engines: bring the rebuilt highs to a natural level.
     var extendBandwidth = true
     var fillSpectralHoles = true
+    var restoreTransients = true
+    var restoreStereo = true
     var declip = true
     var exportFormat: ExportFormat = .alac
 
@@ -114,7 +117,8 @@ struct RestorationSettings: Codable, Hashable, Sendable {
 
 extension RestorationSettings {
     private enum CodingKeys: String, CodingKey {
-        case engine, computeUnits, preset, intensity, extendBandwidth, fillSpectralHoles, declip, exportFormat
+        case engine, computeUnits, preset, intensity, extendBandwidth, fillSpectralHoles, restoreTransients,
+             restoreStereo, declip, exportFormat
     }
 
     /// Missing or unknown keys fall back to defaults, so settings saved by older versions still load.
@@ -130,6 +134,8 @@ extension RestorationSettings {
         intensity = value(.intensity, defaults.intensity)
         extendBandwidth = value(.extendBandwidth, defaults.extendBandwidth)
         fillSpectralHoles = value(.fillSpectralHoles, defaults.fillSpectralHoles)
+        restoreTransients = value(.restoreTransients, defaults.restoreTransients)
+        restoreStereo = value(.restoreStereo, defaults.restoreStereo)
         declip = value(.declip, defaults.declip)
         exportFormat = value(.exportFormat, defaults.exportFormat)
         if !engine.isAvailable { engine = .signal }

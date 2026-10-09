@@ -4,6 +4,7 @@ struct VerdictCard: View {
     var analysis: AudioAnalysis
     var restoredAnalysis: AudioAnalysis?
     var restoredEngine: String?
+    var notes: [String] = []
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -37,10 +38,11 @@ struct VerdictCard: View {
                 }
                 GridRow {
                     Fact(title: "Coupure", value: analysis.cutoffFrequency.kilohertz)
-                    Fact(
-                        title: analysis.isClipped ? "Saturation" : "Source estimée",
-                        value: analysis.isClipped
-                            ? "Détectée" : analysis.estimatedBitrate.map { "≈ \($0) kbps" } ?? "Sans perte")
+                    Fact(title: "Source estimée", value: analysis.estimatedBitrate.map { "≈ \($0) kbps" } ?? "Sans perte")
+                }
+                GridRow {
+                    Fact(title: "Stéréo", value: stereoDescription)
+                    Fact(title: "Saturation", value: analysis.isClipped ? "Détectée" : "Aucune")
                 }
             }
 
@@ -53,10 +55,25 @@ struct VerdictCard: View {
                         .foregroundStyle(.tint)
                 }
                 .font(.subheadline)
+
+                ForEach(notes, id: \.self) { note in
+                    Label(note, systemImage: "checkmark")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
         .padding(20)
         .glassEffect(.regular, in: .rect(cornerRadius: 28))
+    }
+
+    private var stereoDescription: String {
+        guard let stereo = analysis.stereo else { return "—" }
+        switch stereo.kind {
+        case .mono: return "Mono"
+        case .intact: return "Intacte"
+        case .collapsed: return stereo.collapseFrequency.map { "Resserrée > \($0.kilohertz)" } ?? "Resserrée"
+        }
     }
 
     private var tint: Color {

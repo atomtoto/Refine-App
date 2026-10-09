@@ -3,13 +3,17 @@ Refine is an iOS app that enhances and restores music quality from your audio fi
 
 ## Ce que fait l'app
 
-- **Analyse du spectre** : détecte la coupure laissée par l'encodeur (≈ 16–17 kHz à 128 kbps), estime le débit d'origine et repère les « faux lossless » (FLAC/WAV issus d'un MP3).
+- **Analyse du spectre** : détecte la coupure laissée par l'encodeur (≈ 16–17 kHz à 128 kbps), estime le débit d'origine, repère les « faux lossless » (FLAC/WAV issus d'un MP3) et mesure la largeur stéréo.
 - **Deux moteurs, 100 % sur l'iPhone** (aucune donnée envoyée, aucun compte) :
   - **IA Apollo** (par défaut) : réseau de neurones [Apollo](https://github.com/JusperLee/Apollo) entraîné à restaurer
     les MP3 (24–128 kbps), converti en Core ML et exécuté sur le GPU. Reconstruit les aigus et corrige les artefacts
     de compression sur tout le spectre. Voir `Tools/ConvertApollo` et `THIRD_PARTY_NOTICES.md` (CC BY-SA 4.0).
   - **Traitement du signal** (Accelerate/vDSP), instantané :
     réparation des crêtes écrêtées, comblement des trous spectraux, reconstruction des aigus par réplication de bande.
+- **Finitions** après chaque moteur, réglées sur le fichier et mesurées :
+  - **Attaques** : retire le pré-écho, ce souffle que le MP3 étale juste avant les percussions ;
+  - **Brillance** : ramène les aigus reconstruits au niveau que prédit la pente du spectre ;
+  - **Espace** : rouvre l'image stéréo si l'encodeur l'a resserrée dans les aigus (rien n'est fait sinon).
 - **Export** 16 bits / 44,1 kHz avec dither TPDF : ALAC, WAV, ou AAC 256 kbps (le format d'Apple Music et des AirPods).
 - **Comparaison** : spectrogramme avant/après avec séparateur glissable, écoute A/B synchronisée sans coupure.
 

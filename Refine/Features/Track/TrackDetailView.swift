@@ -27,7 +27,10 @@ struct TrackDetailView: View {
                     ContentUnavailableView("Lecture impossible", systemImage: "exclamationmark.triangle", description: Text(failure))
                 } else {
                     if let analysis = track.analysis {
-                        VerdictCard(analysis: analysis, restoredAnalysis: track.restoredAnalysis, restoredEngine: track.restoredEngine)
+                        VerdictCard(
+                            analysis: analysis, restoredAnalysis: track.restoredAnalysis,
+                            restoredEngine: track.restoredEngine,
+                            notes: track.restorationNotes?.components(separatedBy: "\n") ?? [])
                     }
                     spectrumSection
                     actions
@@ -68,6 +71,7 @@ struct TrackDetailView: View {
         }
         .task(id: track.artworkData) {
             palette = await ArtworkPalette.colors(from: track.artworkData)
+                ?? ArtworkPalette.vinyl(hue: VinylView.hue(for: track.id))
         }
         .task(id: MediaKey(analyzed: track.analysisData != nil, restoredAt: track.restoredAt)) {
             loadMedia()
@@ -80,7 +84,7 @@ struct TrackDetailView: View {
 
     private var header: some View {
         VStack(spacing: 14) {
-            ArtworkView(data: track.artworkData, cornerRadius: 24)
+            ArtworkView(data: track.artworkData, cornerRadius: 24, seed: track.id, spinning: player.isPlaying)
                 .frame(maxWidth: 200)
                 .shadow(color: .black.opacity(0.25), radius: 20, y: 10)
 
@@ -117,7 +121,7 @@ struct TrackDetailView: View {
                 original: originalSpectrogram,
                 restored: restoredSpectrogram,
                 preview: restoration?.preview?.cgImage,
-                progress: restoration?.fraction,
+                progress: restoration.map { $0.stage == .engine ? $0.previewCoverage : 1 },
                 cutoff: track.analysis?.cutoffFrequency,
                 playhead: player.duration > 0 && (player.isPlaying || player.currentTime > 0)
                     ? player.currentTime / player.duration : nil,
@@ -130,9 +134,8 @@ struct TrackDetailView: View {
         if let restoration {
             VStack(spacing: 12) {
                 ProgressView(value: restoration.fraction) {
-                    Label(
-                        restoration.engine == .apollo ? "Restauration par l'IA…" : "Reconstruction des aigus…",
-                        systemImage: restoration.engine == .apollo ? "brain" : "wand.and.sparkles")
+                    Label(restoration.title, systemImage: restoration.systemImage)
+                        .contentTransition(.symbolEffect(.replace))
                         .symbolEffect(.pulse)
                 } currentValueLabel: {
                     Text(restoration.fraction.formatted(.percent.precision(.fractionLength(0))))
@@ -215,10 +218,13 @@ struct TrackDetailView: View {
     }
 }
 
-/// Square artwork, or a tinted placeholder.
+/// Square artwork, or a vinyl in the track's own colour.
 struct ArtworkView: View {
     var data: Data?
     var cornerRadius: CGFloat
+    /// Picks the vinyl's colour when there is no artwork.
+    var seed: UUID
+    var spinning = false
 
     var body: some View {
         Group {
@@ -226,20 +232,30 @@ struct ArtworkView: View {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
+                    .aspectRatio(1, contentMode: .fit)
+                    .clipShape(.rect(cornerRadius: cornerRadius))
             } else {
-                Rectangle()
-                    .fill(Color.accentColor.gradient)
-                    .overlay {
-                        Image(systemName: "music.note")
-                            .font(.system(size: 200))
-                            .minimumScaleFactor(0.1)
-                            .padding(24)
-                            .foregroundStyle(.white.opacity(0.85))
-                    }
+                VinylView(hue: VinylView.hue(for: seed), spinning: spinning)
             }
         }
-        .aspectRatio(1, contentMode: .fit)
-        .clipShape(.rect(cornerRadius: cornerRadius))
         .accessibilityHidden(true)
+    }
+}
+
+private extension TrackProcessor.RestorationState {
+    var title: String {
+        switch (stage, engine) {
+        case (.finishing, _): "Finitions : attaques, espace, brillance…"
+        case (.engine, .apollo): "Restauration par l'IA…"
+        case (.engine, .signal): "Reconstruction des aigus…"
+        }
+    }
+
+    var systemImage: String {
+        switch (stage, engine) {
+        case (.finishing, _): "slider.horizontal.3"
+        case (.engine, .apollo): "brain"
+        case (.engine, .signal): "wand.and.sparkles"
+        }
     }
 }

@@ -62,8 +62,9 @@ struct SpectrogramRevealView: View {
                 }
 
                 if original == nil {
-                    ProgressView()
+                    ProgressView("Analyse du spectre…")
                         .tint(.white)
+                        .font(.caption)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }

@@ -76,6 +76,7 @@ struct LibraryView: View {
             if case .success(let urls) = result { importFiles(urls) }
         }
         .onOpenURL { importFiles([$0]) }
+        .task { processor.resumeInterruptedWork(tracks) }
         .alert(
             "Oups",
             isPresented: Binding(get: { processor.lastError != nil }, set: { if !$0 { processor.lastError = nil } })

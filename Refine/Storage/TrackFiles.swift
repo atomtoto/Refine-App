@@ -27,6 +27,15 @@ enum TrackFiles {
         try? FileManager.default.removeItem(at: directory(for: id))
     }
 
+    /// Deletes the working files a restoration leaves behind when the app quits mid-way.
+    static func removeLeftovers(for id: UUID) {
+        let directory = directory(for: id)
+        guard let names = try? FileManager.default.contentsOfDirectory(atPath: directory.path(percentEncoded: false)) else { return }
+        for name in names where name.hasPrefix("restoring.") || name.hasSuffix(".pass1.caf") {
+            try? FileManager.default.removeItem(at: directory.appending(path: name))
+        }
+    }
+
     /// A file name safe for sharing, e.g. "Artist – Title (Refine).m4a".
     static func exportName(title: String, artist: String?, fileExtension: String) -> String {
         let base = [artist, title].compactMap { $0 }.joined(separator: " – ")
