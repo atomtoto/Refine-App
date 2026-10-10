@@ -45,6 +45,8 @@ private func settings(air: Bool = false, stereo: Bool = false, transients: Bool 
     settings.rebalanceTone = false
     settings.restorePunch = false
     settings.adjustLoudness = false
+    settings.tameSibilance = false
+    settings.tightenBass = false
     return settings
 }
 

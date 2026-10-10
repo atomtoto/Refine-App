@@ -116,6 +116,12 @@ struct RestorationSettings: Codable, Hashable, Sendable {
     var restorePunch = true
     /// Remaster: raise a weak master, make room for restored attacks, and limit true peaks to −1 dBTP.
     var adjustLoudness = true
+    /// Mix: dB applied to centred content in the voice's band, −6…+6.
+    var vocalLevel: Double = 0
+    /// Mix: de-esser and dynamic control of harsh mids. Off by default: only the listener can tell style from excess.
+    var tameSibilance = false
+    /// Mix: mono low end.
+    var tightenBass = true
     var exportFormat: ExportFormat = .alac
 
     init() {}
@@ -124,7 +130,7 @@ struct RestorationSettings: Codable, Hashable, Sendable {
 extension RestorationSettings {
     private enum CodingKeys: String, CodingKey {
         case engine, computeUnits, preset, intensity, extendBandwidth, fillSpectralHoles, restoreTransients,
-             restoreStereo, declip, rebalanceTone, restorePunch, adjustLoudness, exportFormat
+             restoreStereo, declip, rebalanceTone, restorePunch, adjustLoudness, vocalLevel, tameSibilance, tightenBass, exportFormat
     }
 
     /// Missing or unknown keys fall back to defaults, so settings saved by older versions still load.
@@ -146,6 +152,9 @@ extension RestorationSettings {
         rebalanceTone = value(.rebalanceTone, defaults.rebalanceTone)
         restorePunch = value(.restorePunch, defaults.restorePunch)
         adjustLoudness = value(.adjustLoudness, defaults.adjustLoudness)
+        vocalLevel = value(.vocalLevel, defaults.vocalLevel)
+        tameSibilance = value(.tameSibilance, defaults.tameSibilance)
+        tightenBass = value(.tightenBass, defaults.tightenBass)
         exportFormat = value(.exportFormat, defaults.exportFormat)
         if !engine.isAvailable { engine = .signal }
     }

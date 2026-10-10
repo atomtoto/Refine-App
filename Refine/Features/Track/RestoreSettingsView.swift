@@ -119,6 +119,44 @@ struct RestoreSettingsView: View {
                 }
 
                 Section {
+                    LabeledContent {
+                        Text(vocalLevelText)
+                            .monospacedDigit()
+                            .contentTransition(.numericText())
+                    } label: {
+                        Label("Voix", systemImage: "music.microphone")
+                    }
+                    Slider(value: $settings.vocalLevel, in: -6...6, step: 1) {
+                        Text("Voix")
+                    } minimumValueLabel: {
+                        Text("En retrait").font(.caption)
+                    } maximumValueLabel: {
+                        Text("En avant").font(.caption)
+                    }
+                    .accessibilityValue(vocalLevelText)
+                    Toggle(isOn: $settings.tameSibilance) {
+                        Label {
+                            Text("Adoucir sifflantes et duretés")
+                            Text("Calme les « s » qui piquent et les pics agressifs des médiums. À essayer à l'écoute : sur certains morceaux, c'est le style.").font(.footnote)
+                        } icon: {
+                            Image(systemName: "waveform.badge.minus")
+                        }
+                    }
+                    Toggle(isOn: $settings.tightenBass) {
+                        Label {
+                            Text("Resserrer le grave")
+                            Text("Basse et grosse caisse en mono sous 120 Hz, pour un grave plus net.").font(.footnote)
+                        } icon: {
+                            Image(systemName: "speaker.wave.3")
+                        }
+                    }
+                } header: {
+                    Text("Mix")
+                } footer: {
+                    Text("La voix est repérée parce qu'elle est mixée au centre : les instruments placés sur les côtés bougent peu.")
+                }
+
+                Section {
                     Toggle(isOn: $settings.rebalanceTone) {
                         Label {
                             Text("Rééquilibrer le son")
@@ -196,6 +234,12 @@ struct RestoreSettingsView: View {
         case .mono:
             return "Fichier mono : rien à élargir."
         }
+    }
+
+    private var vocalLevelText: String {
+        settings.vocalLevel == 0
+            ? "Inchangée"
+            : "\(settings.vocalLevel > 0 ? "+" : "−")\(abs(settings.vocalLevel).decibels)"
     }
 
     private var toneDetail: String {

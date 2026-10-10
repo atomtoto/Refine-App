@@ -19,6 +19,10 @@ Refine is an iOS app that enhances and restores music quality from your audio fi
   - **Équilibre tonal** : redonne de la clarté à un son sourd, allège un grave ou un bas-médium en excès ;
   - **Punch** : rend leurs attaques aux masters écrasés par le limiteur (transient shaper sur trois bandes) ;
   - **Volume** : remonte un master trop faible vers −14 LUFS, avec un limiteur true peak à −1 dBTP.
+- **Mix**, sans séparer les instruments :
+  - **Voix** : curseur de −6 à +6 dB sur ce qui est au centre de l'image, là où la voix est mixée ;
+  - **Grave resserré** : basse et grosse caisse en mono sous 120 Hz ;
+  - **Sifflantes et duretés** (à activer à l'écoute) : de-esser et contrôle dynamique des médiums, qui ne visent que les pics extrêmes.
 - **Export** 16 bits / 44,1 kHz avec dither TPDF : ALAC, WAV, ou AAC 256 kbps (le format d'Apple Music et des AirPods).
 - **Comparaison** : spectrogramme avant/après avec séparateur glissable, écoute A/B synchronisée sans coupure et à volume égal, pour que la version la plus forte ne paraisse pas meilleure à tort.
 

@@ -194,6 +194,8 @@ struct RemasterChainTests {
         settings.extendBandwidth = false
         settings.restoreStereo = false
         settings.restoreTransients = false
+        settings.tameSibilance = false
+        settings.tightenBass = false
         return settings
     }
 

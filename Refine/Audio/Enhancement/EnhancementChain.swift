@@ -1,8 +1,8 @@
 import Foundation
 
 /// Finishing stages run on an engine's output: « Équilibre tonal » (`TonalEqualizer`), « Brillance »
-/// (`AirEqualizer`), « Espace » (`StereoWidener`), « Attaques » (`TransientRestorer`), « Punch »
-/// (`PunchShaper`), then the volume and a true-peak limiter. Equalisation, widening and volume are fixed per
+/// (`AirEqualizer`), « Espace » (`StereoWidener`), « Mix » (`MixEnhancer`), « Attaques »
+/// (`TransientRestorer`), « Punch » (`PunchShaper`), then the volume and a true-peak limiter. Equalisation, widening and volume are fixed per
 /// file, computed from the long-term statistics of the engine's output, so they never pump.
 ///
 /// Stereo audio is processed as Mid/Side: the equalisation applies to both, the rebuilt Side is added to S,
@@ -12,6 +12,7 @@ final class EnhancementChain {
     private let midFilter: StaticSpectralFilter?
     private let sideFilter: StaticSpectralFilter?
     private let widenFilter: StaticSpectralFilter?
+    private let mix: MixEnhancer?
     private let transients: [TransientRestorer]
     private let tonal: TonalEqualizer?
     private let air: AirEqualizer?
@@ -68,6 +69,12 @@ final class EnhancementChain {
             sideFilter = nil
             widenFilter = nil
         }
+        let mixOptions = MixEnhancer.Options(
+            vocalLevel: min(max(settings.vocalLevel, -6), 6), tameSibilance: settings.tameSibilance,
+            tightenBass: settings.tightenBass, amount: amount)
+        mix = mixOptions.vocalLevel != 0 || mixOptions.tameSibilance || mixOptions.tightenBass
+            ? MixEnhancer(options: mixOptions, channelCount: channelCount)
+            : nil
         transients = settings.restoreTransients
             ? (0..<channelCount).map { _ in TransientRestorer(amount: amount) }
             : []
@@ -116,11 +123,13 @@ final class EnhancementChain {
     }
 
     func process(_ channels: [[Float]]) -> [[Float]] {
-        shapeDynamics(restoreTransients(equalize(channels) { filter, samples in filter.process(samples) }))
+        let equalized = equalize(channels) { filter, samples in filter.process(samples) }
+        return shapeDynamics(restoreTransients(mix?.process(equalized) ?? equalized))
     }
 
     func finish() -> [[Float]] {
-        let tail = equalize(Array(repeating: [], count: channelCount)) { filter, _ in filter.finish() }
+        var tail = equalize(Array(repeating: [], count: channelCount)) { filter, _ in filter.finish() }
+        if let mix { tail = zip(mix.process(tail), mix.finish()).map { $0 + $1 } }
         var processed = restoreTransients(tail)
         if !transients.isEmpty { processed = zip(processed, transients).map { $0 + $1.finish() } }
         return shapeDynamics(processed, finishing: true)
@@ -140,6 +149,7 @@ final class EnhancementChain {
             notes.append("\(attacks) attaque\(attacks > 1 ? "s" : "") débarrassée\(attacks > 1 ? "s" : "") du pré-écho")
         }
         notes += tonal?.notes ?? []
+        notes += mix?.notes ?? []
         if let punch, punch.attacks > 0 {
             notes.append("Punch rendu à \(punch.attacks) attaque\(punch.attacks > 1 ? "s" : "")")
         }
