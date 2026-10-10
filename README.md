@@ -35,3 +35,5 @@ Xcode 27, iOS 27. Le projet utilise des dossiers synchronisés : tout fichier aj
 ```bash
 xcodebuild -project Refine.xcodeproj -scheme Refine -destination 'platform=iOS Simulator,name=iPhone 18 Pro' test
 ```
+
+L'icône est un document Icon Composer (`Refine/AppIcon.icon`) dont le fond est un vrai spectrogramme, généré par `Tools/IconSpectrogram`. L'ancienne icône reste proposée dans les Réglages de l'app (icône alternative `AppIconClassic`).

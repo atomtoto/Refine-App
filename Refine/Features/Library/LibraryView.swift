@@ -10,6 +10,7 @@ struct LibraryView: View {
     @State private var selection: Track?
     @State private var searchText = ""
     @State private var importing = false
+    @State private var showingSettings = false
 
     private static let importableTypes: [UTType] = [.mp3, .audio, .mpeg4Audio, .wav, .aiff]
         + [UTType("org.xiph.flac")].compactMap { $0 }
@@ -48,9 +49,15 @@ struct LibraryView: View {
             .navigationTitle("Refine")
             .searchable(text: $searchText, prompt: "Titre ou artiste")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Réglages", systemImage: "gearshape") { showingSettings = true }
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button("Importer", systemImage: "plus") { importing = true }
                 }
+            }
+            .sheet(isPresented: $showingSettings) {
+                SettingsView()
             }
             .overlay {
                 if tracks.isEmpty {

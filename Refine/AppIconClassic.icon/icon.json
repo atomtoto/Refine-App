@@ -29,7 +29,7 @@
             "scale" : 1.3,
             "translation-in-points" : [
               0,
-              0
+              -29
             ]
           }
         },
@@ -54,7 +54,7 @@
             "scale" : 1.3,
             "translation-in-points" : [
               0,
-              0
+              -29
             ]
           }
         },
@@ -82,10 +82,10 @@
           "image-name" : "Divider.svg",
           "name" : "Divider",
           "position" : {
-            "scale" : 1,
+            "scale" : 1.3,
             "translation-in-points" : [
               0,
-              0
+              142
             ]
           }
         }
@@ -106,46 +106,39 @@
           "image-name" : "Cutoff.svg",
           "name" : "Cutoff",
           "position" : {
-            "scale" : 1,
+            "scale" : 1.5,
             "translation-in-points" : [
-              0,
-              0
+              -13,
+              162
             ]
           }
-        }
-      ],
-      "shadow" : {
-        "kind" : "none",
-        "opacity" : 0.5
-      },
-      "translucency" : {
-        "enabled" : false,
-        "value" : 0.5
-      }
-    },
-    {
-      "layers" : [
+        },
         {
-          "glass" : false,
-          "image-name" : "Spectrogram.png",
-          "image-name-specializations" : [
+          "fill-specializations" : [
             {
               "appearance" : "tinted",
-              "value" : "SpectrogramMono.png"
+              "value" : {
+                "linear-gradient" : [
+                  "display-p3:0.94432,1.00000,0.95157,1.00000",
+                  "display-p3:0.21094,0.21094,0.21094,1.00000"
+                ]
+              }
             }
           ],
-          "name" : "Spectrogram",
+          "glass" : true,
+          "image-name" : "Spectrum.svg",
+          "name" : "Spectrum",
           "position" : {
-            "scale" : 1,
+            "scale" : 1.2,
             "translation-in-points" : [
               0,
-              0
+              129
             ]
           }
         }
       ],
       "shadow" : {
-        "kind" : "none",
+        "kind" : "layer-color",
         "opacity" : 0.5
       },
       "translucency" : {
