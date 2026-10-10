@@ -25,6 +25,7 @@ Refine is an iOS app that enhances and restores music quality from your audio fi
   - **Sifflantes et duretés** (à activer à l'écoute) : de-esser et contrôle dynamique des médiums, qui ne visent que les pics extrêmes.
 - **Export** 16 bits / 44,1 kHz avec dither TPDF : ALAC, WAV, ou AAC 256 kbps (le format d'Apple Music et des AirPods).
 - **Comparaison** : spectrogramme avant/après avec séparateur glissable, écoute A/B synchronisée sans coupure et à volume égal, pour que la version la plus forte ne paraisse pas meilleure à tort. La lecture passe par `AVPlayer` : avec des AirPods, l'audio spatial (stéréo spatialisée, suivi de la tête) se règle depuis le centre de contrôle, et le morceau apparaît dans « À l'écoute » et sur l'écran verrouillé.
+- **Activité en direct** : pendant une restauration, l'écran verrouillé et la Dynamic Island montrent le vinyle du morceau et un spectre qui s'allume des graves jusqu'aux aigus reconstruits. Refine continue quelques instants après avoir quitté l'app ; si iOS la suspend, l'activité passe « En pause » et la restauration reprend au retour dans l'app (extension `RefineWidgets`, données partagées dans `RefineShared`).
 
 > Les données supprimées par la compression ne peuvent pas être récupérées à l'identique : Refine les reconstruit de façon plausible. D'autres moteurs peuvent être ajoutés derrière le protocole `RestorationEngine` ; un modèle spectral se branche via `SpectralModel` et `SpectralBlockProcessor`.
 

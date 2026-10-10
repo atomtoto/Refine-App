@@ -37,12 +37,6 @@ struct VinylView: View {
         return (restingAngle + elapsed * Self.degreesPerSecond).truncatingRemainder(dividingBy: 360)
     }
 
-    private var labelColors: [Color] {
-        [
-            Color(hue: hue, saturation: 0.55, brightness: 1),
-            Color(hue: (hue + 0.05).truncatingRemainder(dividingBy: 1), saturation: 0.85, brightness: 0.72),
-        ]
-    }
 
     private var disc: some View {
         Canvas { context, size in
@@ -86,7 +80,7 @@ struct VinylView: View {
             } else {
                 // Label, with printed lines that make the turn visible.
                 context.fill(circle(label), with: .linearGradient(
-                    Gradient(colors: labelColors),
+                    Gradient(colors: Self.labelColors(hue: hue)),
                     startPoint: CGPoint(x: center.x - label, y: center.y - label),
                     endPoint: CGPoint(x: center.x + label, y: center.y + label)))
                 context.stroke(circle(label * 0.93), with: .color(.white.opacity(0.25)), lineWidth: max(0.5, label * 0.02))
@@ -124,6 +118,14 @@ struct VinylView: View {
 }
 
 extension VinylView {
+    /// The label's gradient for tracks without a cover, also used by the restoration Live Activity.
+    static func labelColors(hue: Double) -> [Color] {
+        [
+            Color(hue: hue, saturation: 0.55, brightness: 1),
+            Color(hue: (hue + 0.05).truncatingRemainder(dividingBy: 1), saturation: 0.85, brightness: 0.72),
+        ]
+    }
+
     /// A hue drawn from the track's identifier: random from one track to the next, stable for each.
     static func hue(for id: UUID) -> Double {
         let bytes = id.uuid

@@ -20,6 +20,7 @@ final class TrackProcessor {
     var lastError: String?
 
     @ObservationIgnored private var tasks: [UUID: Task<Void, Never>] = [:]
+    @ObservationIgnored private let activities = RestorationActivities()
 
     // MARK: - Import
 
@@ -107,10 +108,13 @@ final class TrackProcessor {
         let engine = settings.engine.implementation
         restorations[id] = RestorationState(fraction: 0, engine: settings.engine)
         tasks[id] = Task {
+            var outcome = RestorationActivities.Outcome.cancelled
             defer {
                 restorations[id] = nil
                 tasks[id] = nil
+                activities.end(id, outcome: outcome)
             }
+            await activities.start(for: track, engine: settings.engine)
             do {
                 for try await event in engine.restore(job) {
                     switch event {
@@ -122,6 +126,7 @@ final class TrackProcessor {
                             preview: progress.preview ?? previous?.preview,
                             previewCoverage: progress.preview == nil ? previous?.previewCoverage ?? 0 : progress.previewCoverage,
                             engine: settings.engine)
+                        activities.update(id, fraction: progress.fraction, stage: progress.stage)
                     case .finished(let output):
                         if let previous = track.restoredURL { try? FileManager.default.removeItem(at: previous) }
                         let finalURL = track.directory.appending(path: finalName)
@@ -136,9 +141,11 @@ final class TrackProcessor {
                     }
                 }
                 try Task.checkCancellation()
+                outcome = .finished
             } catch {
                 try? FileManager.default.removeItem(at: workingURL)
                 if !(error is CancellationError) {
+                    outcome = .failed
                     lastError = "La restauration a échoué : \(error.localizedDescription)"
                 }
             }
@@ -148,6 +155,13 @@ final class TrackProcessor {
     func cancelRestoration(_ track: Track) {
         tasks[track.id]?.cancel()
     }
+
+    // MARK: - App lifecycle
+
+    /// Restorations keep going for a little while after the app leaves the foreground.
+    func didEnterBackground() { activities.didEnterBackground() }
+
+    func didBecomeActive() { activities.didBecomeActive() }
 
     // MARK: - Deletion
 
