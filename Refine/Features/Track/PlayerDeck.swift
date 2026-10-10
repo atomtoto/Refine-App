@@ -61,7 +61,12 @@ struct PlayerDeck: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            if player.isBluetoothOutput {
+            if player.isSpatialAudioEnabled {
+                Label("Audio spatial disponible : réglez-le depuis le centre de contrôle.", systemImage: "airpods")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else if player.isBluetoothOutput {
                 Label("Écoute Bluetooth : le casque recompresse le son. Comparez de préférence en filaire.", systemImage: "headphones")
                     .font(.caption)
                     .foregroundStyle(.secondary)

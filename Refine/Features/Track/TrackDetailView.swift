@@ -74,7 +74,7 @@ struct TrackDetailView: View {
                 ?? ArtworkPalette.vinyl(hue: VinylView.hue(for: track.id))
         }
         .task(id: MediaKey(analysis: track.analysisData, restoredAt: track.restoredAt)) {
-            loadMedia()
+            await loadMedia()
         }
         .onDisappear { player.stop() }
         .sensoryFeedback(.success, trigger: track.restoredAt)
@@ -200,18 +200,31 @@ struct TrackDetailView: View {
 
     // MARK: - Loading
 
+    /// The artwork, or the track's vinyl, for the lock screen and Control Center.
+    private var nowPlayingArtwork: UIImage? {
+        if let data = track.artworkData, let image = UIImage(data: data) { return image }
+        let renderer = ImageRenderer(content: VinylView(hue: VinylView.hue(for: track.id)).frame(width: 600, height: 600))
+        renderer.scale = 1
+        return renderer.uiImage
+    }
+
     private struct MediaKey: Hashable {
         var analysis: Data?
         var restoredAt: Date?
     }
 
-    private func loadMedia() {
+    private func loadMedia() async {
         originalSpectrogram = UIImage(contentsOfFile: track.originalSpectrogramURL.path(percentEncoded: false))
         restoredSpectrogram = track.isRestored ? UIImage(contentsOfFile: track.restoredSpectrogramURL.path(percentEncoded: false)) : nil
         guard track.analysis != nil else { return }
         let wasPlaying = player.isPlaying
         let position = player.currentTime
-        try? player.load(original: track.originalURL, restored: track.restoredURL)
+        do {
+            try await player.load(original: track.originalURL, restored: track.restoredURL)
+        } catch {
+            return
+        }
+        player.setNowPlaying(title: track.title, artist: track.artist, artwork: nowPlayingArtwork)
         player.matchLoudness(
             original: track.analysis?.loudness?.integrated,
             restored: track.isRestored ? track.restoredAnalysis?.loudness?.integrated : nil)
