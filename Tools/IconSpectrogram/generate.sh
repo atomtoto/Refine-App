@@ -9,7 +9,7 @@ trap 'rm -rf "$work"' EXIT
 swiftc -O "$here/synth.swift" -o "$work/synth"
 swiftc -O "$here/spectrogram.swift" -o "$work/spectrogram"
 "$work/synth" "$work/source.wav"
-# A real low-bitrate MP3: LAME's 12.5 kHz low-pass puts the cut-off just above mid-height on the linear axis.
-lame --quiet -b 96 --resample 44.1 --lowpass 12.5 "$work/source.wav" "$work/clip.mp3"
+# A real low-bitrate MP3: LAME's 11 kHz low-pass puts the cut-off at mid-height on the linear axis.
+lame --quiet -b 96 --resample 44.1 --lowpass 11 "$work/source.wav" "$work/clip.mp3"
 ffmpeg -loglevel error -y -i "$work/clip.mp3" "$work/decoded.wav"
 "$work/spectrogram" "$work/source.wav" "$work/decoded.wav" "$assets/Spectrogram.png" "$assets/SpectrogramMono.png"
