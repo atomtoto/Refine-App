@@ -84,7 +84,7 @@ struct TrackDetailView: View {
 
     private var header: some View {
         VStack(spacing: 14) {
-            ArtworkView(data: track.artworkData, cornerRadius: 24, seed: track.id, spinning: player.isPlaying)
+            ArtworkView(data: track.artworkData, seed: track.id, spinning: player.isPlaying)
                 .frame(maxWidth: 200)
                 .shadow(color: .black.opacity(0.25), radius: 20, y: 10)
 
@@ -234,27 +234,16 @@ struct TrackDetailView: View {
     }
 }
 
-/// Square artwork, or a vinyl in the track's own colour.
+/// The track's vinyl, with the cover on its label when there is one, otherwise in the track's own colour.
 struct ArtworkView: View {
     var data: Data?
-    var cornerRadius: CGFloat
     /// Picks the vinyl's colour when there is no artwork.
     var seed: UUID
     var spinning = false
 
     var body: some View {
-        Group {
-            if let data, let image = UIImage(data: data) {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-                    .aspectRatio(1, contentMode: .fit)
-                    .clipShape(.rect(cornerRadius: cornerRadius))
-            } else {
-                VinylView(hue: VinylView.hue(for: seed), spinning: spinning)
-            }
-        }
-        .accessibilityHidden(true)
+        VinylView(hue: VinylView.hue(for: seed), artwork: data.flatMap(UIImage.init(data:)), spinning: spinning)
+            .accessibilityHidden(true)
     }
 }
 

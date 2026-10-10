@@ -7,7 +7,7 @@ struct TrackRow: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            ArtworkView(data: track.thumbnailData, cornerRadius: 10, seed: track.id)
+            ArtworkView(data: track.thumbnailData, seed: track.id)
                 .frame(width: 56)
 
             VStack(alignment: .leading, spacing: 3) {
